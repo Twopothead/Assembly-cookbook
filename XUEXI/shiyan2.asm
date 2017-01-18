@@ -14,22 +14,31 @@ start : mov ax,stack
         mov sp,30 
         mov ax,data
         mov ds,ax
-       mov ax,1
+        mov ax,1
         mov bx,0
         mov cx,100
      s: mov word ptr ds:[bx],ax
         inc ax
         add bx,2
         loop s
-      lea si ,source
-      mov ax,37h  ;改为075a:0037;075a:0000里似乎有重要东西
-      ;(这一行如果是mov ax,36h都将破坏重要数据，屏幕无显示)
-      mov di,ax
-      cld 
-      mov cx,100*2
-      rep movsb
-      nop
-      nop
+ copy:  lea si ,source
+       mov ax,37h  ;改为075a:0037;075a:0000里似乎有重要东西
+       ;(这一行如果是mov ax,36h都将破坏重要数据，屏幕无显示)
+       mov di,ax
+       cld 
+       mov cx,100*2
+       rep movsb
+       nop
+       nop
+       lea si,source
+       mov ax,37h
+       mov di,ax
+       cld
+       mov cx,100
+       rep cmpsw
+       jnz copy
+       mov ax,0
+
       mov ax,37h
       mov di,ax
       mov ax,0
@@ -37,8 +46,8 @@ start : mov ax,stack
       nop
       nop
  plus:     add ax,es:[di]
-      add di,2
-      loop plus
+           add di,2
+          loop plus
       mov dx,0
       mov bx,10
       div bx;;;;;;ax=01f9(商505) dx=0(0)
@@ -51,11 +60,11 @@ start : mov ax,stack
       nop 
       mov cx,4
 show:pop dx
-  add dx ,30h
-   mov ax,0200h
-   int 21h
-   loop show
-   mov ax,4c00h
-   int 21h
+     add dx ,30h
+     mov ax,0200h
+     int 21h
+     loop show
+  mov ax,4c00h
+  int 21h
 code ends
 end start
