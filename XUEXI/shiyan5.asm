@@ -6,7 +6,7 @@ msg db 'The score between 90 and 100:',0ah,0dh,'$'
 minmsg db 'Min is :',0ah,0dh,'$'
 maxmsg db 'Max is :',0ah,0dh,'$'
 midmsg db 'The middle score is: ',0ah,0dh,'$'
-rankmsg db 'Randk ordering:',0ah,0dh,'$'
+rankmsg db 'Rank ordering:',0ah,0dh,'$'
 data ends
 stack segment
    db 16 dup(0)
@@ -47,7 +47,7 @@ int 21h
 ;mov ah,9
 ;int 21h
 lea si,buf
-
+add si,2
 mov cx,5
 mov di,0
 shu:call transf
