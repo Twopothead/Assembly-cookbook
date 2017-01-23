@@ -1,23 +1,21 @@
-data segment
-buf db  80,?,20 dup(1,2,3),'$'
-data ends
-stack segment
-   db 16 dup(0)
-stack ends
-assume cs:code,ds:data,ss:stack
-code segment
-start:mov ax,data
-mov ds,ax
-mov si,4
-lea si,buf
-
-mov al,6
-add si,2
-mov ds:[si],al
-nop
-nop
-nop
-mov ax,4c00h
-int 21h
-code ends
-end start
+DATA SEGMENT
+MAXLEN    DB   100
+DATA   ENDS
+CODE SEGMENT
+ASSUME CS:CODE,DS:DATA
+START:MOV AX,DATA
+      MOV DS,AX
+      LEA DX,MAXLEN
+      MOV AH,10
+      INT 21H
+      MOV DL,10
+      MOV AH,2
+      INT 21H
+      
+      LEA DX,MAXLEN+2
+      MOV AH,9
+      INT 21H
+      MOV AH,4CH
+      INT 21H
+CODE ENDS 
+      END START
