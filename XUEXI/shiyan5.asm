@@ -28,6 +28,12 @@ transf:
 	mov cx,2
 	getnum:
 		mov al,[si]
+		sub ax,0
+		cmp al,20h
+		jnz feikongge
+		inc si
+		jmp getnum
+feikongge:
 		and ax,000fh
 		xchg ax,x
 		mov dx,10
