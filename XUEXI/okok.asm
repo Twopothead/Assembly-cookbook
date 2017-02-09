@@ -58,21 +58,39 @@ store macro dest
  rep movs byte ptr es:[di],ds:[si]
 endm
 
+maopao macro
+endm
+
+show macro dest
+mov ah,2
+lea di,dest
+ok:	mov dl,es:[di]
+	cmp dl,'$'
+	jz jieshu
+	int 21h
+	inc di
+	jmp ok
+jieshu: nop
+endm
+
+enter macro
+mov ah,2
+mov dl,0ah
+int 21h
+endm
+
 main proc far
 start:
 init
 inputstr huanchong
 showstr huanchong
+enter
 store namespace
-nop
-nop
+show namespace
+
+
 finish
 main endp
-
-
-
-
-
 
 code ends
 end start
