@@ -1,23 +1,29 @@
 data segment
-  msgname 	db 'Input name:$'
-  msgphone 	db 'Input telephone number:$'
-  msgyn 	db 'Do you want a telephone number? (Y/N)$'
-  tishi 	db 'If you want to add,press 1',0DH,0AH,'If you want to search,press2',0DH,0AH,'$'
-  huanchong db 10,?, 11 dup(?)
-  shows 	db 30 dup('0')
+  msgname   db 'Input name:$'
+  msgphone  db 'Input telephone number:$'
+  msgyn   db 'Do you want a telephone number? (Y/N)$'
+  tishi   db 'If you want to add,press 1',0DH,0AH,'If you want to search,press2',0DH,0AH,'$'
+  huanchong db 16,?, 17 dup(?)
+  shows   db 30 dup('0')
+  hmtimes db 0
+  cxvalue dw 3
 data ends
-assume ds:data,cs:code,es:extra
+assume ds:data,cs:code,es:extra,ss:stack
+stack segment
+ db 20 dup (0)
+stack ends
 extra segment
-		namespace db 100 dup('2')
-  		numspace  db 100 dup('3')
+    namespace db 800 dup('2')
+    numspace  db 800 dup('3')
 extra ends
 code segment
 
 init macro
-	mov ax,data
-	mov ds,ax
-	mov ax,es
-	mov es,ax
+  mov ax,data
+  mov ds,ax
+  mov ax,extra
+  mov es,ax
+  
 endm
 
 finish macro 
@@ -38,9 +44,9 @@ inputstr macro str
 endm
 
 showstr macro str
-	mov ah,9
-	lea dx,str+2
-	int 21h
+  mov ah,9
+  lea dx,str+2
+  int 21h
 endm
 
 showmsg macro msg
@@ -57,9 +63,14 @@ showchar macro char
  int 21h
 endm
 
-store macro dest
+store macro dest,cishu
  lea si,huanchong+2
- lea di,dest
+ lea di,dest 
+ mov ah,0
+ mov al,cishu
+ mov cx,16
+ mul cx
+ add di,ax
  cld
  mov cx,bp
  rep movs byte ptr es:[di],ds:[si]
@@ -91,23 +102,34 @@ endm
 main proc far
 start:
 init
+mov hmtimes,0
+
+next:mov cx,cxvalue
 showmsg msgname
 enter
 inputstr huanchong
 showstr huanchong
 enter
-store namespace
+store namespace,hmtimes
 show namespace
 enter
+jmp phone
 
-showmsg msgphone
+jieli:jmp next
+phone:showmsg msgphone
 enter
 inputstr huanchong
 showstr huanchong
 enter
-store numspace
+store numspace,hmtimes
 show numspace
 enter
+
+inc hmtimes
+nop
+mov cx,cxvalue
+dec cxvalue
+loop jieli
 
 
 
