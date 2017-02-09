@@ -43,6 +43,13 @@ showstr macro str
 	int 21h
 endm
 
+showmsg macro msg
+  mov ah,9
+  lea dx,msg
+  int 21h
+endm
+
+
 showchar macro char
  mov ah,2
  mov dl,char
@@ -62,14 +69,16 @@ maopao macro
 endm
 
 show macro dest
+local ok    ;宏汇编中防止多次存入同一个地址, 用local
+local jieshu;宏汇编中防止多次存入同一个地址，用local
 mov ah,2
 lea di,dest
-ok:	mov dl,es:[di]
-	cmp dl,'$'
-	jz jieshu
-	int 21h
-	inc di
-	jmp ok
+ok: mov dl,es:[di]
+  cmp dl,'$'
+  jz jieshu
+  int 21h
+  inc di
+  jmp ok
 jieshu: nop
 endm
 
@@ -82,11 +91,25 @@ endm
 main proc far
 start:
 init
+showmsg msgname
+enter
 inputstr huanchong
 showstr huanchong
 enter
 store namespace
 show namespace
+enter
+
+showmsg msgphone
+enter
+inputstr huanchong
+showstr huanchong
+enter
+store numspace
+show numspace
+enter
+
+
 
 
 finish
