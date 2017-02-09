@@ -1,0 +1,165 @@
+data segment
+  msgname db 'Input name:$'
+  msgphone db 'Input telephone number:$'
+  msgyn db 'Do you want a telephone number? (Y/N)$'
+  temp dw 01h,02h
+   huanchong db 10,?, 11 dup('1')
+  haha db 'Student'
+  teletable db ?
+  tishi DB 'If you want to add,press 1',0DH,0AH,'If you want to search,press2',0DH,0AH,'$'
+	shows db 30 dup('0')
+
+
+data ends
+assume ds:data,cs:code,es:extra
+
+extra segment
+  namespace db 100 dup('2')
+  numspace db 100 dup('3')
+extra ends
+code segment
+
+hehe macro haha
+	mov bx,offset haha
+	mov bp,bx
+	mov bx,seg haha
+	mov es,bx
+	mov ah,13h
+	mov al,1
+	;mov bl,8dh;color
+	mov bl,01001010b
+	mov bh,0
+	mov cx,7
+	int 10h
+endm 
+enter macro
+	mov ah,2
+	mov dl,0dh
+	int 21h
+	mov dl,0ah
+	int 21h
+	
+endm
+showstr macro str
+	lea dx, str
+	mov ah,9
+	int 21h
+endm
+cls macro
+	mov ah,06h
+	mov al,0
+	mov bh,0fh
+	mov ch,0
+	mov cl,0
+	mov dh,60
+	mov dl,80
+	int 10h
+	mov dx,0
+	mov ah,2
+
+	int 10h
+endm 
+cursor macro row,column
+	mov ah,2
+	mov dh,row
+	mov dl,column
+	mov bh,0
+	int 10h
+endm
+inputstr macro str
+    mov ah,10
+    lea dx,str
+    int 21h
+endm
+bell macro
+	mov ah,2
+	mov dl,07h
+	int 21h
+endm
+showchar macro char
+    mov ah,2
+    mov dl,char
+    add dl,30h
+    int 21h
+endm
+finish macro 
+mov ax,4c00h
+int 21h
+endm
+
+
+store macro dest
+	lea si,huanchong+2
+	lea di,dest
+	cld
+	lea bx,huanchong+1
+	mov cx,[bx]
+	rep movs byte ptr es:[di],ds:[si]
+endm
+
+show proc near
+
+  lea di,namespace
+
+		mov ah,2	
+		mov cx,100
+		nop
+		nop
+		nop
+		
+S:	mov dl,byte ptr es:[di]
+nop
+	int 21h
+
+	inc di
+	loop S
+ret
+ show endp
+
+
+
+
+
+
+
+
+
+input macro
+showstr msgname
+enter
+inputstr huanchong
+store namespace
+enter
+;showstr namespace
+endm
+
+init macro
+	mov ax,data
+	mov ds,ax
+	mov ax,extra
+	mov es,ax
+endm
+
+start:
+
+init
+main proc far
+
+;input
+;showstr msgname
+;enter
+inputstr huanchong
+nop
+store namespace
+;enter
+nop
+call show
+ 
+
+
+finish
+main endp
+
+
+code ends
+end start
