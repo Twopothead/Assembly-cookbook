@@ -11,6 +11,7 @@ data segment
   msg2 db 'telephone number:$'
   msgkongge db  5 dup(32),'$'
   pos dw 0
+  total dw 3 ;开始一次性输入3个人，如果有新增的，total会加
 data ends
 assume ds:data,cs:code,es:extra,ss:stack
 stack segment
@@ -94,7 +95,8 @@ local inlp
 local next
 local xunhuan
 local huan
-mov cx,3
+;mov cx,3
+mov cx,total
 dec cx
 mov si,0
 mov bx,0
@@ -236,7 +238,8 @@ local again
 enter
 enter
 mov bx,0
-mov cx,3
+mov cx,total
+;mov cx,3
 again:
       showmsg msg1
       restoreshowname  pos
@@ -263,10 +266,9 @@ inputstr huanchong
 showstr huanchong
 enter
 store namespace,hmtimes
-show namespace
+;;;;show namespace
 enter
 jmp phone
-
 jieli:jmp next
 phone:showmsg msgphone
 enter
@@ -274,11 +276,10 @@ inputstr huanchong
 showstr huanchong
 enter
 store numspace,hmtimes
-show numspace
+;;;;show numspace
 enter
 
 inc hmtimes
-nop
 mov cx,cxvalue
 dec cxvalue
 loop jieli
@@ -288,17 +289,19 @@ maopao namespace
 ;display
 showlist
 enter
-enter
 showmsg msgtishi
-cmp dl,'1'
+mov ah,1
+int 21h
+cmp al,'1'
 jz tianjia
-cmp dl,'2'
-jz search
+cmp al,'2'
+jz jielitwo
 
 tianjia:
-mov cxvalue,0
+mov cxvalue,1
+inc total
 jmp jieli
-
+jielitwo:jmp search
 showlist
 
 search:
