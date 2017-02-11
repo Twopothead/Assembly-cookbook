@@ -76,7 +76,56 @@ store macro dest,cishu
  rep movs byte ptr es:[di],ds:[si]
 endm
 
-maopao macro
+showch macro ch
+ mov ah,2
+ mov dl,ch
+ int 21h
+endm
+
+maopao macro space
+local outlp
+local inlp
+local next
+mov cx,3
+dec cx
+mov si,0
+mov bx,0
+showch byte ptr es:space[si][bx]
+enter
+outlp:mov dx,cx
+inlp: mov al,byte ptr es:space[si][bx]
+      cmp al,byte ptr es:space[si][bx+1]
+      jna next
+      xchg al,byte ptr es:space[si][bx]
+      mov byte ptr es:space[si][bx],al
+next:inc bx
+     dec dx
+     jnz inlp
+     loop outlp
+endm
+
+maopao macro space
+local outlp
+local inlp
+local next
+mov cx,3
+dec cx
+mov si,0
+mov bx,0
+outlp:mov dx,cx
+inlp: mov al,byte ptr es:space[si][bx]
+      cmp al,byte ptr es:space[si][bx+16]
+      jna next
+      xchg al,byte ptr es:space[si][bx+16]
+      mov byte ptr es:space[si][bx],al
+next:add si,16
+
+     dec dx
+     jnz inlp
+     loop outlp
+endm
+exchang macro space 
+
 endm
 
 show macro dest
@@ -98,6 +147,46 @@ mov ah,2
 mov dl,0ah
 int 21h
 endm
+
+display macro
+local aga
+local agai
+mov di,0
+mov cx,100
+mov ah,2
+aga:mov dl,byte ptr es:namespace[di]
+inc di
+int 21h
+loop aga
+mov cx,100
+mov di,0
+agai:mov dl,byte ptr es:numspace[di]
+inc di
+int 21h
+loop agai
+endm
+
+displ macro
+local aga
+local agai
+mov di,0
+mov cx,3
+mov ah,2
+mov bx,0
+aga:mov dl,byte ptr es:namespace[di][bx]
+add di,16
+int 21h
+loop aga
+mov cx,3
+mov di,0
+agai:mov dl,byte ptr es:numspace[di]
+add di,16
+int 21h
+loop agai
+endm
+
+
+
 
 main proc far
 start:
@@ -131,11 +220,16 @@ mov cx,cxvalue
 dec cxvalue
 loop jieli
 
-
-
+display
+enter
+displ
+enter
+maopao namespace
+display
 
 finish
 main endp
+
 
 code ends
 end start
