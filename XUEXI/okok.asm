@@ -90,6 +90,7 @@ local outlp
 local inlp
 local next
 local xunhuan
+local huan
 mov cx,3
 dec cx
 mov si,0
@@ -100,8 +101,13 @@ outlp:mov dx,cx
       mov si,0
 inlp: mov al,byte ptr es:space[si][bx]
       cmp al,byte ptr es:space[si][bx+16]
-      jna next
-       exchange namespace
+      jb next
+          ja huan  
+          inc bx     ;当前几个字母相等时执行这几行代码  
+          cmp bx,15
+          jnz inlp
+          mov bx,0
+   huan: exchange namespace
        exchange numspace
       ;;;;;;xchg al,byte ptr es:space[si][bx+16]
       ;;;;;;mov byte ptr es:space[si][bx],al
