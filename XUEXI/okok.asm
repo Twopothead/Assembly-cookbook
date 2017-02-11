@@ -101,22 +101,10 @@ outlp:mov dx,cx
 inlp: mov al,byte ptr es:space[si][bx]
       cmp al,byte ptr es:space[si][bx+16]
       jna next
-      push cx
-      push bx
-     
-     mov cx,8
- xunhuan:     push word ptr es:space[si][bx+16]
-      push word ptr es:space[si][bx]
-      pop word ptr es:space[si][bx+16]
-      pop word ptr es:space[si][bx]
-      add bx,2
-      loop xunhuan
-      pop bx
-      pop cx
-
-      ;xchg al,byte ptr es:space[si][bx+16]
-      ;mov byte ptr es:space[si][bx],al
-
+       exchange namespace
+       exchange numspace
+      ;;;;;;xchg al,byte ptr es:space[si][bx+16]
+      ;;;;;;mov byte ptr es:space[si][bx],al
 next:add si,16
 
      dec dx
@@ -125,6 +113,20 @@ next:add si,16
      loop outlp
 endm
 
+exchange macro space
+local xunhuan
+     push cx
+     push bx
+              mov cx,8
+       xunhuan: push word ptr es:space[si][bx+16]
+                push word ptr es:space[si][bx]
+                pop word ptr es:space[si][bx+16]
+                pop word ptr es:space[si][bx]
+               add bx,2
+       loop xunhuan
+      pop bx
+      pop cx
+endm
 
 show macro dest
 local ok    ;宏汇编中防止多次存入同一个地址, 用local
@@ -221,22 +223,12 @@ loop jieli
 
 display
 enter
-displ
-
-
-enter
-enter
-enter
-enter
-enter
-enter
 enter
 maopao namespace
 display
 
 finish
 main endp
-
 
 code ends
 end start
