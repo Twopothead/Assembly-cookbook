@@ -1,17 +1,20 @@
 data segment
   msgname   db 'Input name:$'
   msgphone  db 'Input telephone number:$'
-  msgyn   db 'Do you want a telephone number? (Y/N)$'
-  tishi   db 'If you want to add,press 1',0DH,0AH,'If you want to search,press2',0DH,0AH,'$'
+  msgtishi   db 'If you want to add,press 1',0DH,0AH,'If you want to search,press2',0DH,0AH,'$'
   huanchong db 16,?, 17 dup(?)
   shows   db 30 dup('0')
   hmtimes db 0
   cxvalue dw 3
   temp db 20 dup('1')
+  msg1 db 'name:$'
+  msg2 db 'telephone number:$'
+  msgkongge db  5 dup(32),'$'
+  pos dw 0
 data ends
 assume ds:data,cs:code,es:extra,ss:stack
 stack segment
- db 80 dup (0)
+ db 200 dup (0)
 stack ends
 extra segment
     namespace db 800 dup('2')
@@ -26,7 +29,7 @@ init macro
   mov es,ax
   mov ax,stack
   mov ss,ax
-  mov sp,80
+  mov sp,200
 endm
 
 finish macro 
@@ -108,7 +111,7 @@ inlp: mov al,byte ptr es:space[si][bx]
           jnz inlp
           mov bx,0
    huan: exchange namespace
-       exchange numspace
+         exchange numspace
       ;;;;;;xchg al,byte ptr es:space[si][bx+16]
       ;;;;;;mov byte ptr es:space[si][bx],al
 next:add si,16
@@ -173,6 +176,42 @@ int 21h
 loop agai
 endm
 
+restoreshowname macro  
+local again
+push di
+push cx
+mov cx,8
+mov di,0
+again:
+push word ptr es:namespace[di][bx]
+pop word ptr ds:temp[di]
+add di,2
+loop again
+mov ah,9
+mov dl,offset temp
+int 21h
+pop cx
+pop di
+endm
+
+restoreshownum macro 
+local again
+push di
+push cx
+mov cx,8
+mov di,0
+again:
+push word ptr es:numspace[di][bx]
+pop word ptr ds:temp[di]
+add di,2
+loop again
+mov ah,9
+mov dl,offset temp
+int 21h
+pop cx
+pop di
+endm
+
 displ macro
 local aga
 local agai
@@ -186,13 +225,29 @@ int 21h
 loop aga
 mov cx,3
 mov di,0
-agai:mov dl,byte ptr es:numspace[di]
+agai:mov dl,byte ptr es:numspace[di][bx]
 add di,16
 int 21h
 loop agai
 endm
 
-
+showlist macro 
+local again
+enter
+enter
+mov bx,0
+mov cx,3
+again:
+      showmsg msg1
+      restoreshowname  pos
+      showmsg msgkongge
+      showmsg msg2
+      restoreshownum 
+      enter
+      add bx,16
+      mov pos,bx
+loop again
+endm
 
 
 main proc far
@@ -201,6 +256,7 @@ init
 mov hmtimes,0
 
 next:mov cx,cxvalue
+
 showmsg msgname
 enter
 inputstr huanchong
@@ -226,13 +282,26 @@ nop
 mov cx,cxvalue
 dec cxvalue
 loop jieli
-
-display
 enter
-enter
+;display
 maopao namespace
-display
+;display
+showlist
+enter
+enter
+showmsg msgtishi
+cmp dl,'1'
+jz tianjia
+cmp dl,'2'
+jz search
 
+tianjia:
+mov cxvalue,0
+jmp jieli
+
+showlist
+
+search:
 finish
 main endp
 
