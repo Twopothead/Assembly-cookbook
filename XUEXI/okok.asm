@@ -85,48 +85,46 @@ showch macro ch
  int 21h
 endm
 
-
-
 maopao macro space
 local outlp
 local inlp
 local next
+local xunhuan
 mov cx,3
 dec cx
 mov si,0
 mov bx,0
+mov dx,cx
 outlp:mov dx,cx
+      mov bx,0
+      mov si,0
 inlp: mov al,byte ptr es:space[si][bx]
       cmp al,byte ptr es:space[si][bx+16]
       jna next
-      xchg al,byte ptr es:space[si][bx+16]
-      mov byte ptr es:space[si][bx],al
+      push cx
+      push bx
+     
+     mov cx,8
+ xunhuan:     push word ptr es:space[si][bx+16]
+      push word ptr es:space[si][bx]
+      pop word ptr es:space[si][bx+16]
+      pop word ptr es:space[si][bx]
+      add bx,2
+      loop xunhuan
+      pop bx
+      pop cx
+
+      ;xchg al,byte ptr es:space[si][bx+16]
+      ;mov byte ptr es:space[si][bx],al
+
 next:add si,16
 
      dec dx
+     cmp dx,0
      jnz inlp
      loop outlp
 endm
-exchange macro space 
-local ok
-push si
-push di
-push cx
-mov si,0
-mov bx,0
-mov di,0
-mov cx,8
-ok:
-push word ptr es:space[si][bx]
-pop word ptr ds:temp[di]
-add si,2
-add di,2
-loop ok
 
-pop cx
-pop di
-pop si
-endm
 
 show macro dest
 local ok    ;宏汇编中防止多次存入同一个地址, 用local
@@ -154,13 +152,14 @@ local agai
 mov di,0
 mov cx,100
 mov ah,2
-aga:mov dl,byte ptr es:namespace[di]
+mov bx,0
+aga:mov dl,byte ptr es:namespace[di][bx]
 inc di
 int 21h
 loop aga
 mov cx,100
 mov di,0
-agai:mov dl,byte ptr es:numspace[di]
+agai:mov dl,byte ptr es:numspace[di][bx]
 inc di
 int 21h
 loop agai
@@ -229,14 +228,10 @@ enter
 enter
 enter
 enter
-exchange namespace
-mov ah,9
-lea dx,temp
-int 21h
 enter
 enter
 enter
-
+maopao namespace
 display
 
 finish
