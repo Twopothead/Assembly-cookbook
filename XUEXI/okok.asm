@@ -7,10 +7,11 @@ data segment
   shows   db 30 dup('0')
   hmtimes db 0
   cxvalue dw 3
+  temp db 20 dup('1')
 data ends
 assume ds:data,cs:code,es:extra,ss:stack
 stack segment
- db 20 dup (0)
+ db 80 dup (0)
 stack ends
 extra segment
     namespace db 800 dup('2')
@@ -23,7 +24,9 @@ init macro
   mov ds,ax
   mov ax,extra
   mov es,ax
-  
+  mov ax,stack
+  mov ss,ax
+  mov sp,80
 endm
 
 finish macro 
@@ -82,27 +85,7 @@ showch macro ch
  int 21h
 endm
 
-maopao macro space
-local outlp
-local inlp
-local next
-mov cx,3
-dec cx
-mov si,0
-mov bx,0
-showch byte ptr es:space[si][bx]
-enter
-outlp:mov dx,cx
-inlp: mov al,byte ptr es:space[si][bx]
-      cmp al,byte ptr es:space[si][bx+1]
-      jna next
-      xchg al,byte ptr es:space[si][bx]
-      mov byte ptr es:space[si][bx],al
-next:inc bx
-     dec dx
-     jnz inlp
-     loop outlp
-endm
+
 
 maopao macro space
 local outlp
@@ -124,8 +107,25 @@ next:add si,16
      jnz inlp
      loop outlp
 endm
-exchang macro space 
+exchange macro space 
+local ok
+push si
+push di
+push cx
+mov si,0
+mov bx,0
+mov di,0
+mov cx,8
+ok:
+push word ptr es:space[si][bx]
+pop word ptr ds:temp[di]
+add si,2
+add di,2
+loop ok
 
+pop cx
+pop di
+pop si
 endm
 
 show macro dest
@@ -223,8 +223,20 @@ loop jieli
 display
 enter
 displ
+
+
 enter
-maopao namespace
+enter
+enter
+enter
+exchange namespace
+mov ah,9
+lea dx,temp
+int 21h
+enter
+enter
+enter
+
 display
 
 finish
