@@ -2,6 +2,7 @@ data segment
   msgname          db 'Input name:$'
   msgphone         db 'Input telephone number:$'
   msgtishi         db 'If you want to add,press 1',0DH,0AH,'If you want to search,press2',0DH,0AH,'$'
+  msgyn            db 'Do you want to kill this process?(y/n)',0dh,0ah,'$'
   huanchong        db 16,?, 17 dup(?)
   shows            db 30 dup('0')
   hmtimes          db 0
@@ -399,7 +400,7 @@ phone:
       maopao namespace
     display
       showlist
-      enter
+fenzhi:  enter
       showmsg msgtishi
       mov ah,1
       int 21h
@@ -416,7 +417,15 @@ tianjia:
 sousuo:
       enter
       search
-      finish
+      enter
+      showmsg msgyn
+      enter
+      mov ah,1
+      int 21h
+      cmp al,'y'
+      jz jieshule
+      jmp fenzhi
+jieshule:      finish
 main endp
 code ends
 end start
