@@ -95,6 +95,11 @@ local inlp
 local next
 local xunhuan
 local huan
+local jishu
+local budeng
+local compare
+local jieliinlp
+local jielioutlp
 ;mov cx,3
 mov cx,total
 dec cx
@@ -107,21 +112,42 @@ outlp:mov dx,cx
 inlp: mov al,byte ptr es:space[si][bx]
       cmp al,byte ptr es:space[si][bx+16]
       jb next
-          ja huan  
-          inc bx     ;当前几个字母相等时执行这几行代码  
-          cmp bx,15
-          jnz inlp
-          mov bx,0
+      ja huan  
+      push cx
+      push bx
+  jishu:    inc bx
+     mov al,byte ptr es:space[si][bx]
+      cmp al,'$'
+      jnz jishu
+      mov cx,bx
+      mov bx,0
+   compare:   mov al,byte ptr es:space[si][bx] 
+      cmp al,byte ptr es:space[si][bx+16] 
+      jnz budeng
+      inc bx 
+      loop compare
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;完全匹配      
+      mov bx,0
+      pop bx
+      pop cx
+      jmp next
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;接力站
+jieliinlp:jmp inlp
+jielioutlp:jmp outlp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;接力站
+   budeng : pop bx
+            pop cx
+            jb next 
+            ja huan
    huan: exchange namespace
          exchange numspace
       ;;;;;;xchg al,byte ptr es:space[si][bx+16]
       ;;;;;;mov byte ptr es:space[si][bx],al
 next:add si,16
-
      dec dx
      cmp dx,0
-     jnz inlp
-     loop outlp
+    jnz jieliinlp
+     loop jielioutlp
 endm
 
 exchange macro space
@@ -252,66 +278,6 @@ again:
 loop again
 endm
 
-search macro
-local aga
-local again
-local ok
-local s
-local xunhuan
-inputstr huanchong
-showstr huanchong
-enter 
-enter
-mov dl,huanchong[1]
-mov di,0
-mov cx,100
-mov ah,2
-aga:mov dl,byte ptr es:namespace[di]
-inc di
-int 21h
-loop aga
-mov di,0
-mov cx,3
-again:mov dl,byte ptr es:namespace[di]
-mov ah,2
-int 21h
-cmp dl,byte ptr huanchong[2]
-jz ok
-add di,16
-loop again
-
-ok:
-
-mov ah,2
-mov bx,di
-mov dl,bl
-add dl,30h
-int 21h
-
-push di
-enter
-mov cx,8
-mov bx,0
-s:
-push word ptr es:namespace[di][bx]
-pop word ptr ds:temp[bx]
-add bx,2
-loop s
-showmsg temp
-showmsg msgkongge
-pop di
-mov cx,8
-mov bx,0
-xunhuan:
-push word ptr es:numspace[di][bx]
-pop word ptr ds:temp[bx]
-add bx,2
-loop xunhuan
-showmsg temp
-
-
-endm
-
 
 main proc far
 start:
@@ -361,12 +327,10 @@ tianjia:
 mov cxvalue,1
 inc total
 jmp jieli
-jielitwo:jmp sousuo
+jielitwo:jmp search
 showlist
 
-sousuo:
-enter
-search
+search:
 finish
 main endp
 
