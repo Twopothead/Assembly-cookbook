@@ -252,6 +252,66 @@ again:
 loop again
 endm
 
+search macro
+local aga
+local again
+local ok
+local s
+local xunhuan
+inputstr huanchong
+showstr huanchong
+enter 
+enter
+mov dl,huanchong[1]
+mov di,0
+mov cx,100
+mov ah,2
+aga:mov dl,byte ptr es:namespace[di]
+inc di
+int 21h
+loop aga
+mov di,0
+mov cx,3
+again:mov dl,byte ptr es:namespace[di]
+mov ah,2
+int 21h
+cmp dl,byte ptr huanchong[2]
+jz ok
+add di,16
+loop again
+
+ok:
+
+mov ah,2
+mov bx,di
+mov dl,bl
+add dl,30h
+int 21h
+
+push di
+enter
+mov cx,8
+mov bx,0
+s:
+push word ptr es:namespace[di][bx]
+pop word ptr ds:temp[bx]
+add bx,2
+loop s
+showmsg temp
+showmsg msgkongge
+pop di
+mov cx,8
+mov bx,0
+xunhuan:
+push word ptr es:numspace[di][bx]
+pop word ptr ds:temp[bx]
+add bx,2
+loop xunhuan
+showmsg temp
+
+
+endm
+
 
 main proc far
 start:
@@ -284,9 +344,9 @@ mov cx,cxvalue
 dec cxvalue
 loop jieli
 enter
-;display
+display
 maopao namespace
-;display
+display
 showlist
 enter
 showmsg msgtishi
@@ -301,10 +361,12 @@ tianjia:
 mov cxvalue,1
 inc total
 jmp jieli
-jielitwo:jmp search
+jielitwo:jmp sousuo
 showlist
 
-search:
+sousuo:
+enter
+search
 finish
 main endp
 
