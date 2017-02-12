@@ -11,7 +11,9 @@ data segment
   msg2             db 'telephone number:$'
   msgkongge        db  5 dup(32),'$'
   pos           dw 0
-  total         dw 3 ;开始一次性输入3个人，如果有新增的，total会加
+  total         dw 3 
+  zhaodaoweizhi dw 0
+  ;开始一次性输入3个人，如果有新增的，total会加
 data ends
 assume ds:data,cs:code,es:extra,ss:stack
 stack segment
@@ -284,6 +286,7 @@ local ok
 local s
 local xunhuan
 local success
+local zhaodao
     inputstr huanchong
     showstr huanchong
 enter 
@@ -299,7 +302,8 @@ aga:mov dl,byte ptr es:namespace[di]
     int 21h
 loop aga
     mov di,0
-    mov cx,3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;mov cx,3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    mov cx,total
 again:mov dl,byte ptr es:namespace[di]
     mov ah,2
     int 21h
@@ -308,8 +312,37 @@ again:mov dl,byte ptr es:namespace[di]
     add di,16
 loop again
 
-ok:
-    push di
+ok:mov zhaodaoweizhi,di
+    push di;;;;;;;这句话很蛋疼
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;第一个字母相同后匹配后面的字母
+push bx
+;;;;;;;;;;;;;;;;push di
+push cx
+mov bx,0
+mov cx,bp
+lea si,namespace
+add di,si
+lea si,huanchong
+add si,2
+repz cmpsb
+;;mov dl,byte ptr es:namespace[di][bx]
+;;cmp dl,byte ptr huanchong[bx+2]
+cmp cx,0
+jz zhaodao
+pop cx
+;;;;;;;;;;;;;;;;pop di
+pop bx
+pop di
+add di,16
+dec cx
+jmp again
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;匹配成功，跳出
+zhaodao:
+        pop cx
+        pop bx
+        pop di
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     enter
     mov cx,8
     mov bx,0
@@ -320,7 +353,8 @@ s:
 loop s
     showmsg temp
     showmsg msgkongge
-    pop di
+  ;;;;;;;;;;;pop di
+mov di,zhaodaoweizhi
     mov cx,8
     mov bx,0
 xunhuan:
