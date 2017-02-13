@@ -1,5 +1,6 @@
 data segment 
   source dw 100 dup(0)
+  msg  db '1+2+3+4+...+100=',0ah,0dh,'$'
 data ends
 extra segment
   dest dw 100 dup(0)
@@ -9,11 +10,25 @@ stack segment
 stack ends
 assume cs:code,ds:data,es:extra,ss:stack 
 code segment
+showmsg proc           ;showmsg子程序调用dos9号中断，显示字符串
+    mov ah,9
+    mov dx,offset msg  ;AH=9,DS:DX=字符串地址
+    int 21h
+  ret
+showmsg endp
+enter proc            ;enter子程序显示回车字符
+    mov ah,2          ;2号功能是单字符显示输出
+    mov dl,0dh        ;回车ASCII码送dl
+    int 21h
+  ret
+enter endp
 start : mov ax,stack
         mov ss,ax
-        mov sp,30 
+        mov sp,30     ;设栈顶指针
         mov ax,data
         mov ds,ax
+        call showmsg
+        call enter
         mov ax,1
         mov bx,0
         mov cx,100
