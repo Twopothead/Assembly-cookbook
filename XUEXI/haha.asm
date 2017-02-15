@@ -6,6 +6,7 @@ chuanlen dw 0
 opresultpos dw 0
 Bresultpos dw 1
 Aresultpos dw ?
+flag db 0
 huanchong db 49,?,49 dup(0),'$'
 data ends
 assume ds:data,es:extra,ss:stack,cs:code
@@ -33,6 +34,13 @@ mov ah,2
 mov dl,char
 int 21h
 endm
+hong macro num
+if num lt 100
+mov ax,ax
+else
+mov ax,ax
+endif
+endm
 start:
 mov ax,data
 mov ds,ax
@@ -41,6 +49,10 @@ mov ss,ax
 mov sp,100
 mov ax,extra
 mov es,ax
+
+;;;;;;
+;hong ax
+;;;;;;;;;
 
 mov ah,10
 lea dx,huanchong
@@ -63,7 +75,7 @@ inc di
 loop again
 enter
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mov bx,0
 mov cx,20
 mov ah,2
@@ -72,7 +84,7 @@ int 21h
 inc bx
 loop s
 enter
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mov bx,1
 xor cx,cx
 mov cx,chuanlen
@@ -87,31 +99,40 @@ sub al,cl
 mov Blen,ax
 showch al
 enter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mov ax,chuanlen
 sub ax,Blen
 sub ax,2
 mov Alen,ax
 showch al
 enter
-
-mov ax,Blen
-showch al
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;mov ax,Blen
+;showch al
 mov si,Blen
 inc si
 mov al,byte ptr es:result[si]
 mov opresultpos,si
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 inc si 
 mov Aresultpos,si
 showchar al
 enter
-;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
 mov si,opresultpos
 mov byte ptr es:result[si],0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+mov ax,Alen
+cmp ax,Blen
+jb ok
+mov flag,1
+ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mov si,Bresultpos
 mov di,Aresultpos
 mov cx,Blen
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mov ax,si
 showch al
@@ -122,10 +143,15 @@ inc cx
 showch al
 enter
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 addplus:mov al,byte ptr es:result[si]
 and al,11001111b
 and byte ptr es:result[di],11001111b
 popf
+;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;
 adc al,byte ptr es:result[di]
 cmp al,10
 jb bujinwei
