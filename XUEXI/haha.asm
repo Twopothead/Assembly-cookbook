@@ -1,8 +1,11 @@
 data segment
 Alen dw 0
 Blen dw 0
+ABmaxlen dw 0
 chuanlen dw 0
-opApos dw 0
+opresultpos dw 0
+Bresultpos dw 1
+Aresultpos dw ?
 huanchong db 49,?,49 dup(0),'$'
 data ends
 assume ds:data,es:extra,ss:stack,cs:code
@@ -10,7 +13,7 @@ stack segment
  dw 50 dup(0)
 stack ends
 extra segment
- A db 20 dup(0),'$'
+ result db 20 dup(0),'$'
  B db 20 dup(0),'$'
 extra ends
 code segment
@@ -52,7 +55,7 @@ mov cx,chuanlen
 mov bx,chuanlen
 inc bx
 lea si,huanchong[bx]
-lea di,A
+lea di,result
 again:mov al,byte ptr ds:[si]
 mov byte ptr es:[di],al
 dec si
@@ -64,7 +67,7 @@ enter
 mov bx,0
 mov cx,20
 mov ah,2
-s:mov dl,byte ptr es:A[bx]
+s:mov dl,byte ptr es:result[bx]
 int 21h
 inc bx
 loop s
@@ -73,7 +76,7 @@ enter
 mov bx,1
 xor cx,cx
 mov cx,chuanlen
-xunhuan:mov dl,byte ptr es:A[bx]
+xunhuan:mov dl,byte ptr es:result[bx]
 cmp dl,30h
 jb tiaochu
 inc bx
@@ -96,10 +99,79 @@ showch al
 
 mov si,Blen
 inc si
-mov al,byte ptr es:A[si]
-mov opApos,si
+mov al,byte ptr es:result[si]
+mov opresultpos,si
+inc si 
+mov Aresultpos,si
 showchar al
+enter
+;;;;;;;;;;;;;;;;
+mov si,opresultpos
+mov byte ptr es:result[si],0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+mov si,Bresultpos
+mov di,Aresultpos
+mov cx,Blen
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+mov ax,si
+showch al
+mov ax,di
+showch al
+mov ax,cx
+inc cx
+showch al
+enter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+addplus:mov al,byte ptr es:result[si]
+and al,11001111b
+and byte ptr es:result[di],11001111b
+popf
+adc al,byte ptr es:result[di]
+cmp al,10
+jb bujinwei
+sub al,10
+stc
+pushf
+jmp biaozhi
+bujinwei:
+clc
+pushf
+biaozhi:
+or  al,00110000b
+mov byte ptr es:result[si],al
+showchar al
+inc si
+inc di
+loop addplus
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+enter
+;mov cx,Blen
+mov cx,6
+mov bx,0
+mov ah,2
+showresult:
+mov dl,es:result[bx]
+;add dl,30h
+int 21h
+inc bx
+loop showresult
+;;;;;;;;;;;;;;;;;;;;;
+mov ABmaxlen ,5
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+mov es:result[0],'$'
+mov cx,ABmaxlen
 
+
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mov ax,4c00h
 int 21h
 code ends
