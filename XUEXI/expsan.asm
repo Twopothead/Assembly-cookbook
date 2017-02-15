@@ -1,7 +1,7 @@
 data segment
 ;A dw 20 dup(0)
-A db 7,1,2,3
-B db 9,5,4,7
+A db 7,1,2,3,0
+B db 9,5,4,7,0
 ;B dw 20 dup(0)
 data ends
 assume cs:code,ds:data,ss:stack
@@ -24,16 +24,18 @@ mov  sp,80
 lea si,A
 lea di,B
 sub ax,ax
-mov cx,4
+mov cx,5
 s:mov al,byte ptr [si]
 adc al,byte ptr [di]
 cmp al,10
 jb bujinwei
 sub al,10
-changecf
+;changecf
+stc
 jmp biaozhi
 bujinwei:
-sub bp,bp
+;sub bp,bp
+clc
 biaozhi:
 mov byte ptr [si],al
 inc si
@@ -41,14 +43,14 @@ inc di
 loop s
 lea si,A
 xor dx,dx
-mov cx,4
+mov cx,5
 nixucun:mov dl,byte ptr [si]
 add dl,30h
 push dx
 inc si
 loop nixucun
 mov ah,2
-mov cx,4
+mov cx,5
 again:
 pop dx
 int 21h
