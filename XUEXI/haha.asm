@@ -2,6 +2,7 @@ data segment
 Alen dw 0
 Blen dw 0
 chuanlen dw 0
+opApos dw 0
 huanchong db 49,?,49 dup(0),'$'
 data ends
 assume ds:data,es:extra,ss:stack,cs:code
@@ -24,6 +25,11 @@ mov dl,ch
 add dl,30h
 int 21h
 endm
+showchar macro char
+mov ah,2
+mov dl,char
+int 21h
+endm
 start:
 mov ax,data
 mov ds,ax
@@ -32,6 +38,7 @@ mov ss,ax
 mov sp,100
 mov ax,extra
 mov es,ax
+
 mov ah,10
 lea dx,huanchong
 int 21h
@@ -42,22 +49,7 @@ mov al,byte ptr huanchong[1]
 mov chuanlen,ax 
 
 mov cx,chuanlen
-lea si,huanchong[2]
-xunhuan:cmp byte ptr [si],30h
-		jb tiaochu
-loop xunhuan
-tiaochu:
-mov ax,chuanlen
-sub ax,cx
-mov Alen,ax
-
-
-xor ax,ax
-mov al,byte ptr huanchong[1]
-mov Alen,ax
-
-mov cx,Alen
-mov bx,Alen
+mov bx,chuanlen
 inc bx
 lea si,huanchong[bx]
 lea di,A
@@ -67,6 +59,8 @@ dec si
 inc di
 loop again
 enter
+
+
 mov bx,0
 mov cx,20
 mov ah,2
@@ -75,6 +69,37 @@ int 21h
 inc bx
 loop s
 enter
+
+mov bx,1
+xor cx,cx
+mov cx,chuanlen
+xunhuan:mov dl,byte ptr es:A[bx]
+cmp dl,30h
+jb tiaochu
+inc bx
+loop xunhuan
+tiaochu:
+mov ax,chuanlen
+sub al,cl
+mov Blen,ax
+showch al
+enter
+mov ax,chuanlen
+sub ax,Blen
+sub ax,2
+mov Alen,ax
+showch al
+enter
+
+mov ax,Blen
+showch al
+
+mov si,Blen
+inc si
+mov al,byte ptr es:A[si]
+mov opApos,si
+showchar al
+
 mov ax,4c00h
 int 21h
 code ends
