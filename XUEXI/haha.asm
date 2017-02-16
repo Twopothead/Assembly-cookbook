@@ -34,13 +34,6 @@ mov ah,2
 mov dl,char
 int 21h
 endm
-hong macro num
-if num lt 100
-mov ax,ax
-else
-mov ax,ax
-endif
-endm
 start:
 mov ax,data
 mov ds,ax
@@ -50,9 +43,7 @@ mov sp,100
 mov ax,extra
 mov es,ax
 
-;;;;;;
-;hong ax
-;;;;;;;;;
+
 
 mov ah,10
 lea dx,huanchong
@@ -122,15 +113,25 @@ enter
 mov si,opresultpos
 mov byte ptr es:result[si],0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;mov ax,Alen
+;cmp ax,Blen
+;jb ok
+;mov flag,1
+;ok:
+;;;;;;;;;;;;;;;;;
+;怕的就是A的长度B的长度长
+;例如678909+999=809976
 mov ax,Alen
 cmp ax,Blen
-jb ok
-mov flag,1
-ok:
+ja findmax
+mov ax,Blen
+findmax:
+mov ABmaxlen,ax
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mov si,Bresultpos
 mov di,Aresultpos
-mov cx,Blen
+;mov cx,Blen
+mov cx,ABmaxlen
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -143,9 +144,18 @@ inc cx
 showch al
 enter
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
+mov flag,0
 addplus:mov al,byte ptr es:result[si]
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+cmp flag,1
+jz zhiling
+cmp al,30h
+jnb notoperator
+mov flag,1
+zhiling:
+mov al,'0'
+notoperator:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 and al,11001111b
 and byte ptr es:result[di],11001111b
 popf
@@ -172,7 +182,12 @@ loop addplus
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 enter
 ;mov cx,Blen
-mov cx,6
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;加一个结束符号
+mov bx,ABmaxlen+1
+mov byte ptr es:result[bx],'$'
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+mov cx,ABmaxlen+2
 mov bx,0
 mov ah,2
 showresult:
@@ -182,21 +197,24 @@ int 21h
 inc bx
 loop showresult
 ;;;;;;;;;;;;;;;;;;;;;
-mov ABmaxlen ,5
+;;;;;;;mov ABmaxlen ,5
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;把=号改为$
 mov es:result[0],'$'
-mov cx,ABmaxlen
-
-
-
-
-
-
-
-
-
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;
+enter
+mov si,2
+mov di,ABmaxlen
+mov cx,ABmaxlen+1
+chuansong:mov al,es:result[di]
+		 mov huanchong[si],al
+		inc si
+		dec di
+loop chuansong
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+mov ah,9
+lea dx,huanchong[2]
+int 21h
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mov ax,4c00h
 int 21h
