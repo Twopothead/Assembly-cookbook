@@ -26,6 +26,7 @@ extra segment
 extra ends
 code segment
 
+;初始化宏，设置数据段，附加端，栈段
 init macro
     mov ax,data
     mov ds,ax
@@ -36,56 +37,65 @@ init macro
     mov sp,200
 endm
 
+;结束宏，4c号中断
 finish macro 
     mov ax,4c00h
     int 21h
 endm
 
+;输入字符串宏
 inputstr macro str
-    mov ah,10
+    mov ah,10       ;10号中断输入字符串
     lea dx,str
     int 21h
-    mov al,str+1
+    mov al,str+1  ;str[0]为最大允许字符数，str[1]为实际输入数
     add al,2
+;str[2]开始是正文，正文结束的后一个字符为str[实际输入个数+2]
     mov ah,0
     mov si,ax
     mov bp,ax
-    mov str[si],'$'
+    mov str[si],'$';在字符串结尾添加$符号
 endm
 
+;显示字符串(对应inputstr宏)
 showstr macro str
     mov ah,9
     lea dx,str+2
     int 21h
 endm
 
+;显示字符串提示
 showmsg macro msg
     mov ah,9
     lea dx,msg
     int 21h
 endm
 
+;2号功能显示0-9字符
 showchar macro char
     mov ah,2
     mov dl,char
-    add dl,30h
+    add dl,30h    ;0-9数值加30h为其对应ASCII码
     int 21h
 endm
 
+;字符串存储宏
 store macro dest,cishu
     lea si,huanchong+2
+;缓冲区是通过10号功能输入的，从huanchong[2]开始
     lea di,dest 
     mov ah,0
     mov al,cishu
     mov cx,16
+;缓冲区大小为16
     mul cx
-    add di,ax
+    add di,ax ;通过这种方式实现对二维数组的寻址
     cld
     mov cx,bp
     rep movs byte ptr es:[di],ds:[si]
 endm
 
-showch macro ch
+showch macro ch  ;2号功能显示字符
     mov ah,2
     mov dl,ch
     int 21h
@@ -102,56 +112,61 @@ local budeng
 local compare
 local jieliinlp
 local jielioutlp
+;定义本地local标号
+;不然当不止调用一次时，多个相同的标号被嵌进主程序，引发混乱
   ;mov cx,3
-      mov cx,total
-      dec cx
-      mov si,0
-      mov bx,0
+      mov cx,total;total这个字单元存着待排序的总人数
+      dec cx;外循环的次数为(总人数-1)
+      mov si,0;si中存第几个人
+      mov bx,0;bx存对某人的姓名中某个字符的相对偏移地址
       mov dx,cx
-outlp:mov dx,cx
+outlp:mov dx,cx;外层循环，保存cx到dx
       mov bx,0
       mov si,0
 inlp: mov al,byte ptr es:space[si][bx]
       cmp al,byte ptr es:space[si][bx+16]
-      jb next
-      ja huan  
-      push cx
+       ;比较相邻两个人的对应位置的字母
+      jb next  ;如果是顺序则下一个
+      ja huan  ;如果是逆序则交换
+;以下代码一直到huan标号前都是对两个字母相同情况处理
+      push cx  ;保存cx,bx
       push bx
-jishu:inc bx
+jishu:inc bx   ;计数，计算从此字符到$符号还有几个，作为cx值
       mov al,byte ptr es:space[si][bx]
       cmp al,'$'
       jnz jishu
-      mov cx,bx
+      mov cx,bx ;离字符串介绍还剩几个字符就循环几次
       mov bx,0
 compare:    mov al,byte ptr es:space[si][bx] 
             cmp al,byte ptr es:space[si][bx+16] 
-            jnz budeng
+            jnz budeng;比较下一个字符，直到出现不同字符为止
             inc bx 
             loop compare
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;完全匹配      
       mov bx,0
-      pop bx
+      pop bx   ;恢复bx，cx
       pop cx
-      jmp next
+      jmp next ;如果这两个字符串完全相同就下一个
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;接力站
 jieliinlp:jmp inlp
 jielioutlp:jmp outlp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;接力站
-   budeng : pop bx
+   budeng : pop bx ;恢复bx，cx,对应前面的pop
             pop cx
-            jb next 
-            ja huan
-   huan: exchange namespace
-         exchange numspace
+            jb next ;如果是顺序则下一个
+            ja huan ;如果是逆序则交换
+   huan: exchange namespace ;把相邻人的名字交换
+         exchange numspace  ;把相邻人的电话号码交换
       ;;;;;;xchg al,byte ptr es:space[si][bx+16]
       ;;;;;;mov byte ptr es:space[si][bx],al
   next:  add si,16
-         dec dx
+         dec dx  ;把dx中保存的cx值减1
          cmp dx,0
-        jnz jieliinlp
-        loop jielioutlp
+        jnz jieliinlp ;内层循环
+        loop jielioutlp ;外层循环
 endm
 
+;交换宏;通过栈暂存数据，交换相邻的人的名字或电话号码
 exchange macro space
 local xunhuan
      push cx
@@ -167,11 +182,12 @@ local xunhuan
       pop cx
 endm
 
+;显示宏
 show macro dest
 local ok    ;宏汇编中防止多次存入同一个地址, 用local
 local jieshu;宏汇编中防止多次存入同一个地址，用local
-   mov ah,2
-   lea di,dest
+   mov ah,2 ;2号功能只能显示一个字符
+   lea di,dest ;通过判断是否到了$符号来达到显示字符串的目的
 ok:mov dl,es:[di]
    cmp dl,'$'
    jz jieshu
@@ -181,13 +197,13 @@ ok:mov dl,es:[di]
 jieshu: nop
 endm
 
-enter macro
+enter macro ;回车宏
     mov ah,2
     mov dl,0ah
     int 21h
 endm
 
-display macro
+display macro ;此宏主要供调试时显示内存的内容
 local aga
 local agai
     mov di,0
@@ -206,6 +222,8 @@ agai:mov dl,byte ptr es:numspace[di][bx]
     loop agai
 endm
 
+;展示存储后的姓名宏
+;用在输入姓名之后
 restoreshowname macro  
 local again
     push di
@@ -215,15 +233,19 @@ local again
 again:
     push word ptr es:namespace[di][bx]
     pop word ptr ds:temp[di]
+;把附加段的姓名区的内容缓存到数据段的temp区
     add di,2
     loop again
     mov ah,9
     mov dl,offset temp
+;把temp区字符串的内容用9号功能显示输出
     int 21h
     pop cx
     pop di
 endm
 
+;展示存储后的电话号码宏
+;用在存好电话号码之后 
 restoreshownum macro 
 local again
 push di
@@ -242,6 +264,8 @@ pop cx
 pop di
 endm
 
+;此宏主要用在调试阶段
+;调试完成后此宏没什么用
 displ macro
 local aga
 local agai
@@ -261,26 +285,27 @@ agai:mov dl,byte ptr es:numspace[di][bx]
     loop agai
 endm
 
+
 showlist macro 
 local again
       enter
       enter
       mov bx,0
-      mov cx,total
+      mov cx,total          ;有多少人就显示多少次
       ;mov cx,3
     again:
-      showmsg msg1
-      restoreshowname  pos
-      showmsg msgkongge
-      showmsg msg2
-      restoreshownum 
+      showmsg msg1          ;输入姓名提示
+      restoreshowname  pos  ;把姓名存到对应位置
+      showmsg msgkongge     ;显示空格
+      showmsg msg2          ;输入号码提示
+      restoreshownum        ;把号码存到对应位置
       enter
       add bx,16
-      mov pos,bx
+      mov pos,bx            ;弄好下一个位置
     loop again
 endm
 
-search macro
+search macro   ;搜索宏
 local aga
 local again
 local ok
@@ -369,11 +394,13 @@ endm
 main proc far
 start:
       init
-      mov hmtimes,0
+      mov hmtimes,0;hmtimes存第几次，从第0个开始
 next: mov cx,cxvalue
-      showmsg msgname
+;cxvalue即一次输入人数，开始设定为3个
+;到后来若继续输入,会改变cxvalue的值继续执行这段代码
+      showmsg msgname;提示输入姓名，回车
       enter
-      inputstr huanchong
+      inputstr huanchong;输入姓名至缓冲区
       showstr huanchong
       enter
       store namespace,hmtimes
